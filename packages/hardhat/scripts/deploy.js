@@ -12,7 +12,7 @@ const main = async () => {
 
   const streamingMetaMultiSigWallet = await deploy("StreamingMetaMultiSigWallet",[
     31337,
-    [ "0xD75b0609ed51307E13bae0F9394b5f63A7f8b6A1" ],
+    [ "0x9BB09321140d2Ed471867bE56b5D5936BAB93E85" ],
     1
   ])
 
