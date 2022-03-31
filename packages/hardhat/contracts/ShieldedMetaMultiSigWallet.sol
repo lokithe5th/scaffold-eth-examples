@@ -4,8 +4,12 @@
 //
 // started from 🏗 scaffold-eth - meta-multi-sig-wallet example https://github.com/austintgriffith/scaffold-eth/tree/meta-multi-sig
 //    (off-chain signature based multi-sig)
-//  added a very simple streaming mechanism where `onlySelf` can open a withdraw-based stream
-//
+//  added a very simple "shielding" mechanism to allow funders to fund the MultiSig, but have no control over the funds.
+//  Once the MultiSig has initiated the claims process, funders can claim their funds + profits back from the MultiSig
+//  This becomes interesting in cases where the multisig is owned by a non-human participant.
+//  The benefit being (depending on local jurisdictions) that taxes only accrue on the profits when claimed @lourenslinde 
+
+//  TL;DR A tax-efficient investment vehicle for on-chain activities. 
 
 pragma solidity >=0.6.0 <0.9.0;
 pragma experimental ABIEncoderV2;
