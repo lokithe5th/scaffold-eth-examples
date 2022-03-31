@@ -14,7 +14,7 @@ import { formatEther, parseEther } from "@ethersproject/units";
 //import Hints from "./Hints";
 //import { Hints, ExampleUI, Subgraph } from "./views"
 import { INFURA_ID, DAI_ADDRESS, DAI_ABI, NETWORK, NETWORKS } from "./constants";
-import { Subgraph, CreateTransaction, Transactions, Owners, Streams, FrontPage } from "./views"
+import { Subgraph, CreateTransaction, Transactions, Owners, Streams, FrontPage, Trust } from "./views"
 
 /*
     Welcome to 🏗 scaffold-eth !
@@ -236,6 +236,9 @@ function App(props) {
           <Menu.Item key="/streams">
             <Link onClick={()=>{setRoute("/streams")}} to="/streams">Streams</Link>
           </Menu.Item>
+          <Menu.Item key="/trust">
+            <Link onClick={()=>{setRoute("/trust")}} to="/trust">Trust</Link>
+          </Menu.Item>
           <Menu.Item key="/create">
             <Link onClick={()=>{setRoute("/create")}} to="/create">Create</Link>
           </Menu.Item>
@@ -302,6 +305,24 @@ function App(props) {
           </Route>
           <Route exact path="/owners">
             <Owners
+              contractName={contractName}
+              address={address}
+              userProvider={userProvider}
+              mainnetProvider={mainnetProvider}
+              localProvider={localProvider}
+              yourLocalBalance={yourLocalBalance}
+              price={price}
+              tx={tx}
+              writeContracts={writeContracts}
+              readContracts={readContracts}
+              blockExplorer={blockExplorer}
+              nonce={nonce}
+              ownerEvents={ownerEvents}
+              signaturesRequired={signaturesRequired}
+            />
+          </Route>
+          <Route exact path="/trust">
+            <Trust
               contractName={contractName}
               address={address}
               userProvider={userProvider}

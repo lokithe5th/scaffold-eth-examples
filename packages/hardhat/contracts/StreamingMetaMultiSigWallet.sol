@@ -7,7 +7,7 @@
 //  added a very simple streaming mechanism where `onlySelf` can open a withdraw-based stream
 //
 
-pragma solidity ^0.6.7;
+pragma solidity >=0.6.0 <0.9.0;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
@@ -99,10 +99,6 @@ contract StreamingMetaMultiSigWallet {
         return _hash.toEthSignedMessageHash().recover(_signature);
     }
 
-    receive() payable external {
-        emit Deposit(msg.sender, msg.value, address(this).balance);
-    }
-
     //
     //  new streaming stuff
     //
@@ -154,5 +150,56 @@ contract StreamingMetaMultiSigWallet {
         emit CloseStream( to );
     }
 
+    // Trust Functionality
+    mapping(address => uint256) public balances;
+    bool public isClaimable;
+    uint256 public claimableFunds;
+    uint256 public claimWindow;
+    uint8 public fee;
+    uint256 public initTime;
+
+    event StartClaimProcess(address initiator, uint256 claimingOpens);
+    event ClaimsOpen(address initiator);
+    event Claim(address funder, uint256 amount);
+
+    receive() payable external {
+        emit Deposit(msg.sender, msg.value, address(this).balance);
+        if (!isClaimable && !(claimWindow > 0)) {
+          balances[msg.sender] += msg.value;
+        }
+    }
+
+    function initClaimWindow(uint256 _claimWindow) public onlySelf returns(uint256) {
+      require(!isClaimable, "Claim window already initialized");
+      claimWindow = _claimWindow;
+      emit StartClaimProcess(msg.sender, block.timestamp + 5 minutes);
+      return block.timestamp + 5 minutes;
+    }
+
+    function initClaims() public returns(bool) {
+      require((claimWindow + 5 minutes) < block.timestamp, "Pre-claim window is still open");
+      isClaimable = true;
+      initTime = block.timestamp;
+      emit ClaimsOpen(msg.sender);
+      return true;
+    }
+
+    modifier onlyFunder() {
+      require(balances[msg.sender] > 0,"Not a funder");
+      _;
+    }
+
+    function totalFunds() public view returns(uint256) {
+      return address(this).balance;
+    }
+
+    function claim(address payable _to) public onlyFunder returns(uint256) {
+      require(initTime + claimWindow > block.timestamp, "Claim window expired");
+      uint256 _funds = (balances[msg.sender]/claimableFunds)*(address(this).balance);
+      (bool sent, bytes memory data) = _to.call{value: _funds}("");
+      require(sent, "Failed to send Ether");
+      emit Claim(msg.sender, _funds);
+      return _funds;
+    }
 
 }
