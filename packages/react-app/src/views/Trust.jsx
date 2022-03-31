@@ -15,7 +15,8 @@ export default function Trust({contractName, ownerEvents, signaturesRequired, ad
 
   const [to, setTo] = useLocalStorage("to");
   const [amount, setAmount] = useLocalStorage("amount","0");
-  const [methodName, setMethodName] = useLocalStorage("initClaimWindow");
+  const [initClaimWindow, setInitClaimWindow] = useLocalStorage("initClaimWindow");
+  const [claimAddress, setClaimAddress] = useLocalStorage("claimAddress");
   const [newOwner, setNewOwner] = useLocalStorage("newOwner");
   const [newSignaturesRequired, setNewSignaturesRequired] = useLocalStorage("newSignaturesRequired");
   const [data, setData] = useLocalStorage("data","0x");
@@ -25,10 +26,18 @@ export default function Trust({contractName, ownerEvents, signaturesRequired, ad
       <h2>MultiSig Trust Actions:</h2>
       
       <div style={{border:"1px solid #cccccc", padding:16, width:400, margin:"auto",marginTop:64}}>
+      <div style={{margin:8,padding:8}}>
+          <Input
+            ensProvider={mainnetProvider}
+            placeholder="Claim window (in seconds)"
+            value={initClaimWindow}
+            onChange={(e)=>{setInitClaimWindow(e.target.value)}}
+          />
+        </div>
         <div style={{margin:8,padding:8}}>
           <Button onClick={()=>{
             //console.log("METHOD",setMethodName)
-            let calldata = readContracts[contractName].interface.encodeFunctionData("initClaimWindow",[100])
+            let calldata = readContracts[contractName].interface.encodeFunctionData("initClaimWindow",[initClaimWindow])
             console.log("calldata",calldata)
             setData(calldata)
             setAmount("0")
@@ -45,31 +54,42 @@ export default function Trust({contractName, ownerEvents, signaturesRequired, ad
       <h2>Funder Trust Actions:</h2>
       <div style={{border:"1px solid #cccccc", padding:16, width:400, margin:"auto",marginTop:64}}>
         <div style={{margin:8,padding:8}}>
-          <Button onClick={()=>{
+        <Button onClick={ async ()=>{
             //console.log("METHOD",setMethodName)
-            let calldata = readContracts[contractName].interface.encodeFunctionData("initClaims",[])
+            tx( writeContracts[contractName].initClaims());
+           /* let calldata = readContracts[contractName].interface.encodeFunctionData("claim",[claimAddress])
             console.log("calldata",calldata)
             setData(calldata)
             setAmount("0")
             setTo(readContracts[contractName].address)
             setTimeout(()=>{
               history.push('/create')
-            },777)
+            },777) */
           }}>
           Unlock Claims
           </Button>
         </div>
         <div style={{margin:8,padding:8}}>
-          <Button onClick={()=>{
+          <AddressInput
+            autoFocus
+            ensProvider={mainnetProvider}
+            placeholder="send funds to"
+            value={claimAddress}
+            onChange={setClaimAddress}
+          />
+        </div>
+        <div style={{margin:8,padding:8}}>
+          <Button onClick={ async ()=>{
             //console.log("METHOD",setMethodName)
-            let calldata = readContracts[contractName].interface.encodeFunctionData("claim",[])
+             tx(writeContracts[contractName].claim(claimAddress));
+           /* let calldata = readContracts[contractName].interface.encodeFunctionData("claim",[claimAddress])
             console.log("calldata",calldata)
             setData(calldata)
             setAmount("0")
             setTo(readContracts[contractName].address)
             setTimeout(()=>{
               history.push('/create')
-            },777)
+            },777) */
           }}>
           Claim
           </Button>

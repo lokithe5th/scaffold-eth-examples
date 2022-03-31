@@ -10,7 +10,7 @@ const main = async () => {
   console.log("\n\n 📡 Deploying...\n");
 
 
-  const streamingMetaMultiSigWallet = await deploy("StreamingMetaMultiSigWallet",[
+  const ShieldedMetaMultiSigWallet = await deploy("ShieldedMetaMultiSigWallet",[
     31337,
     [ "0x9BB09321140d2Ed471867bE56b5D5936BAB93E85" ],
     1

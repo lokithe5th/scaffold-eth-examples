@@ -12,7 +12,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 
-contract StreamingMetaMultiSigWallet {
+contract ShieldedMetaMultiSigWallet {
     using ECDSA for bytes32;
 
     event Deposit(address indexed sender, uint amount, uint balance);
@@ -99,85 +99,43 @@ contract StreamingMetaMultiSigWallet {
         return _hash.toEthSignedMessageHash().recover(_signature);
     }
 
-    //
-    //  new streaming stuff
-    //
-
-    event OpenStream( address indexed to, uint256 amount, uint256 frequency );
-    event CloseStream( address indexed to );
-    event Withdraw( address indexed to, uint256 amount, string reason );
-
-    struct Stream {
-        uint256 amount;
-        uint256 frequency;
-        uint256 last;
-    }
-    mapping(address => Stream) public streams;
-
-    function streamWithdraw(uint256 amount, string memory reason) public {
-        require(streams[msg.sender].amount>0,"withdraw: no open stream");
-        _streamWithdraw(msg.sender,amount,reason);
-    }
-
-    function _streamWithdraw(address payable to, uint256 amount, string memory reason) private {
-        uint256 totalAmountCanWithdraw = streamBalance(to);
-        require(totalAmountCanWithdraw>=amount,"withdraw: not enough");
-        streams[to].last = streams[to].last + ((block.timestamp - streams[to].last) * amount / totalAmountCanWithdraw);
-        emit Withdraw( to, amount, reason );
-        to.transfer(amount);
-    }
-
-    function streamBalance(address to) public view returns (uint256){
-      return (streams[to].amount * (block.timestamp-streams[to].last)) / streams[to].frequency;
-    }
-
-    function openStream(address to, uint256 amount, uint256 frequency) public onlySelf {
-        require(streams[to].amount==0,"openStream: stream already open");
-        require(amount>0,"openStream: no amount");
-        require(frequency>0,"openStream: no frequency");
-
-        streams[to].amount = amount;
-        streams[to].frequency = frequency;
-        streams[to].last = block.timestamp;
-
-        emit OpenStream( to, amount, frequency );
-    }
-
-    function closeStream(address to) public onlySelf {
-        require(streams[to].amount>0,"closeStream: stream already closed");
-        _streamWithdraw(address(uint160(to)),streams[to].amount,"stream closed");
-        delete streams[to];
-        emit CloseStream( to );
-    }
-
     // Trust Functionality
     mapping(address => uint256) public balances;
     bool public isClaimable;
     uint256 public claimableFunds;
+    uint256 public fundsClaimed;
     uint256 public claimWindow;
     uint8 public fee;
     uint256 public initTime;
 
-    event StartClaimProcess(address initiator, uint256 claimingOpens);
+    event StartClaimProcess(address initiator, uint256 startDate, uint256 endDate);
     event ClaimsOpen(address initiator);
     event Claim(address funder, uint256 amount);
 
+    /// custom:receive The receive function should take any ether deposited and add it to the sender's balance
     receive() payable external {
         emit Deposit(msg.sender, msg.value, address(this).balance);
         if (!isClaimable && !(claimWindow > 0)) {
           balances[msg.sender] += msg.value;
+          claimableFunds += msg.value;
         }
     }
-
+ 
+    /// @notice Sets the claim window
+    /// @dev The MultiSig has _claimWindow seconds to return the funds to the MultiSig address before claims can be made against contributed eth
+    /// @return uint256 Date in future when claim window expires
+    /// @param _claimWindow: uint256 value representing the amount of time the claim window must be open.
     function initClaimWindow(uint256 _claimWindow) public onlySelf returns(uint256) {
       require(!isClaimable, "Claim window already initialized");
-      claimWindow = _claimWindow;
-      emit StartClaimProcess(msg.sender, block.timestamp + 5 minutes);
-      return block.timestamp + 5 minutes;
+      claimWindow = _claimWindow + block.timestamp;
+      emit StartClaimProcess(msg.sender, block.timestamp, _claimWindow);
+      return block.timestamp + _claimWindow;
     }
 
+    /// @notice Called by any address to open Claims for funders
+    /// @dev Sets the isClaimable variable to "true" and records the initTime value
     function initClaims() public returns(bool) {
-      require((claimWindow + 5 minutes) < block.timestamp, "Pre-claim window is still open");
+      require(claimWindow < block.timestamp, "Pre-claim window is still open");
       isClaimable = true;
       initTime = block.timestamp;
       emit ClaimsOpen(msg.sender);
@@ -189,17 +147,30 @@ contract StreamingMetaMultiSigWallet {
       _;
     }
 
+    /// @notice Returns the MultiSig funds
     function totalFunds() public view returns(uint256) {
       return address(this).balance;
     }
 
+    /// @notice Function for claiming portion of funds from wallet
+    /// @dev Requires the address where funds must be sent
+    /// @param _to Address where funds must be sent
     function claim(address payable _to) public onlyFunder returns(uint256) {
+      require(isClaimable, "Funds not yet claimable");
       require(initTime + claimWindow > block.timestamp, "Claim window expired");
-      uint256 _funds = (balances[msg.sender]/claimableFunds)*(address(this).balance);
+      uint256 _funds = _determineFunds();
       (bool sent, bytes memory data) = _to.call{value: _funds}("");
       require(sent, "Failed to send Ether");
       emit Claim(msg.sender, _funds);
+      fundsClaimed += _funds;
       return _funds;
+    }
+
+    /// internal functions
+    /// @notice Determine the funds that must be aportioned to the msg.sender
+    /// @return return the return variables of a contract’s function state variable
+    function _determineFunds() internal view returns(uint256){
+      return (balances[msg.sender]/claimableFunds)*(address(this).balance); 
     }
 
 }

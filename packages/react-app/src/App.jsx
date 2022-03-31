@@ -67,10 +67,14 @@ const blockExplorer = targetNetwork.blockExplorer;
 function App(props) {
   const [injectedProvider, setInjectedProvider] = useState();
   /* 💵 This hook will get the price of ETH from 🦄 Uniswap: */
-  const price = useExchangePrice(targetNetwork,mainnetProvider);
+  const price = 3395
+  
+  //useExchangePrice(targetNetwork,mainnetProvider);
 
   /* 🔥 This hook will get the price of Gas from ⛽️ EtherGasStation */
-  const gasPrice = useGasPrice(targetNetwork,"fast");
+  const gasPrice = 36*10**9
+  
+  //useGasPrice(targetNetwork,"fast");
   // Use your injected provider from 🦊 Metamask or if you don't have it then instantly generate a 🔥 burner wallet.
   const userProvider = useUserProvider(injectedProvider, localProvider);
   const address = useUserAddress(userProvider);
@@ -107,7 +111,7 @@ function App(props) {
   const writeContracts = useContractLoader(userProvider)
   if(DEBUG) console.log("🔐 writeContracts",writeContracts)
 
-  const contractName = "StreamingMetaMultiSigWallet"
+  const contractName = "ShieldedMetaMultiSigWallet"
 
   //📟 Listen for broadcast events
   const executeTransactionEvents = useEventListener(readContracts, contractName, "ExecuteTransaction", localProvider, 1);
@@ -208,7 +212,7 @@ function App(props) {
         <Button type={"primary"} onClick={()=>{
           faucetTx({
             to: address,
-            value: parseEther("0.01"),
+            value: parseEther("3.0"),
           });
           setFaucetClicked(true)
         }}>
@@ -232,9 +236,6 @@ function App(props) {
           </Menu.Item>
           <Menu.Item key="/owners">
             <Link onClick={()=>{setRoute("/owners")}} to="/owners">Owners</Link>
-          </Menu.Item>
-          <Menu.Item key="/streams">
-            <Link onClick={()=>{setRoute("/streams")}} to="/streams">Streams</Link>
           </Menu.Item>
           <Menu.Item key="/trust">
             <Link onClick={()=>{setRoute("/trust")}} to="/trust">Trust</Link>
@@ -262,47 +263,7 @@ function App(props) {
               blockExplorer={blockExplorer}
             />
           </Route>
-          <Route exact path="/streams">
-            <Streams
-              contractName={contractName}
-              address={address}
-              userProvider={userProvider}
-              mainnetProvider={mainnetProvider}
-              localProvider={localProvider}
-              yourLocalBalance={yourLocalBalance}
-              price={price}
-              tx={tx}
-              writeContracts={writeContracts}
-              readContracts={readContracts}
-              blockExplorer={blockExplorer}
-              nonce={nonce}
-              withdrawStreamEvents={withdrawStreamEvents}
-              openStreamEvents={openStreamEvents}
-              signaturesRequired={signaturesRequired}
-            />
 
-
-            { /* uncomment for a second contract:
-            <Contract
-              name="SecondContract"
-              signer={userProvider.getSigner()}
-              provider={localProvider}
-              address={address}
-              blockExplorer={blockExplorer}
-            />
-            */ }
-
-            { /* Uncomment to display and interact with an external contract (DAI on mainnet):
-            <Contract
-              name="DAI"
-              customContract={mainnetDAIContract}
-              signer={userProvider.getSigner()}
-              provider={mainnetProvider}
-              address={address}
-              blockExplorer={blockExplorer}
-            />
-            */ }
-          </Route>
           <Route exact path="/owners">
             <Owners
               contractName={contractName}
@@ -375,7 +336,7 @@ function App(props) {
           </Route>
           <Route path="/debug">
             <Contract
-              name="StreamingMetaMultiSigWallet"
+              name="ShieldedMetaMultiSigWallet"
               signer={userProvider.getSigner()}
               provider={localProvider}
               address={address}
