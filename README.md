@@ -1,4 +1,4 @@
-# 🏗 scaffold-eth - streaming meta multi sig example
+# 🏗 scaffold-eth - shielded meta multi sig example
 
 > an off-chain signature based multi sig with shielded trust-like functionality
 
