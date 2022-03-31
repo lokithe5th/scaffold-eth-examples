@@ -1,6 +1,9 @@
 # 🏗 scaffold-eth - streaming meta multi sig example
 
 > an off-chain signature based multi sig with shielded trust-like functionality
+> Warning
+**This is not intended for any illicit activities. Blockchain transactions are immutable and it is your responsibility to ensure you obey by the law**
+This may be a useful protocol for tax efficiency implementations, especially if a bot is used to manage the MultiSig's funds. The bot is not a proxy, as there is no control over the bot's actions once you've deposited your funds. The funds aren't owned by the Funders. But due to the nature of code and smart contract implementation the controlling entity can be trusted to operate within it's given parameters.
 
 ---
 
@@ -135,6 +138,4 @@ The stream will live update with each new block mined:
 
 ![image](https://user-images.githubusercontent.com/2653167/99157102-7fb3e780-2683-11eb-8cb5-121a94d78bac.png)
 
-##Warning
-**This is not intended for any illicit activities. Blockchain transactions are immutable and it is your responsibility to ensure you obey by the law**
-This may be a useful protocol for tax efficiency implementations, especially if a bot is used to manage the MultiSig's funds. The bot is not a proxy, as there is no control over the bot's actions once you've deposited your funds. The funds aren't owned by the Funders. But due to the nature of code and smart contract implementation the controlling entity can be trusted to operate within it's given parameters.
+
